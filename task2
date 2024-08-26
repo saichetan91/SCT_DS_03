@@ -1,0 +1,59 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
+import matplotlib.pyplot as plt
+
+# Load the dataset
+url = "/content/bank-full.csv"
+data = pd.read_csv(url, delimiter=';')
+
+# Display basic information about the dataset
+print("Dataset Info:")
+print(data.info())
+
+# Encode categorical variables
+label_encoders = {}
+for column in data.select_dtypes(include=['object']).columns:
+    if column != 'y':  # Skip the target column
+        le = LabelEncoder()
+        data[column] = le.fit_transform(data[column])
+        label_encoders[column] = le
+
+# Encode the target variable
+data['y'] = data['y'].map({'yes': 1, 'no': 0})
+
+# Split the data into features and target
+X = data.drop('y', axis=1)
+y = data['y']
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Initialize the Decision Tree Classifier
+dt_classifier = DecisionTreeClassifier(random_state=42)
+
+# Train the model
+dt_classifier.fit(X_train, y_train)
+
+# Make predictions
+y_pred = dt_classifier.predict(X_test)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+conf_matrix = confusion_matrix(y_test, y_pred)
+class_report = classification_report(y_test, y_pred)
+
+# Print the results
+print(f"Accuracy: {accuracy:.2f}")
+print("Confusion Matrix:")
+print(conf_matrix)
+print("Classification Report:")
+print(class_report)
+
+# Visualize the Decision Tree
+plt.figure(figsize=(20,10))
+plot_tree(dt_classifier, filled=True, feature_names=X.columns, class_names=['no', 'yes'])
+plt.title('Decision Tree Visualization')
+plt.show()
